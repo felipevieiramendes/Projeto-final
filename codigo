@@ -1,0 +1,67 @@
+import RPi.GPIO as GPIO
+import time
+
+def main():
+   
+    TRIG_PIN = 23
+    ECHO_PIN = 24
+    LED_PIN = 18
+
+    def setup():
+        
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setup(TRIG_PIN, GPIO.OUT)
+        GPIO.setup(ECHO_PIN, GPIO.IN)
+        GPIO.setup(LED_PIN, GPIO.OUT)
+
+    def distance():
+        
+        GPIO.output(TRIG_PIN, True)
+        time.sleep(0.00001)
+        GPIO.output(TRIG_PIN, False)
+
+       
+        pulse_start = time.time()
+        timeout = pulse_start + 0.04  
+        while GPIO.input(ECHO_PIN) == 0 and time.time() < timeout:
+            pulse_start = time.time()
+
+        
+        pulse_end = time.time()
+        timeout = pulse_end + 0.04  
+        while GPIO.input(ECHO_PIN) == 1 and time.time() < timeout:
+            pulse_end = time.time()
+
+        
+        pulse_duration = pulse_end - pulse_start
+
+        
+        distance = pulse_duration * 34300 / 2
+
+        return distance
+
+    def loop():
+        
+        try:
+            while True:
+                dist = distance()
+                print("Distância:", dist, "cm")
+                
+                if dist < 50: 
+                    print("Presença detectada!")
+                    GPIO.output(LED_PIN, GPIO.HIGH) 
+                else:
+                    GPIO.output(LED_PIN, GPIO.LOW)  
+                
+                time.sleep(0.5)
+
+        except KeyboardInterrupt:
+            print("Encerrando...")
+            GPIO.cleanup()
+
+    
+    setup()
+    loop()
+
+if __name__ == "main":
+    main()
